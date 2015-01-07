@@ -1,4 +1,4 @@
-package main
+package minepong
 
 import (
 	"bufio"
@@ -30,22 +30,22 @@ type Pong struct {
 }
 
 type Server struct {
-	name string
-	host string
+	Name string
+	Host string
 
 	conn net.Conn
 }
 
 func NewServer(name string, host string) *Server {
 	return &Server{
-		name: name,
-		host: host,
+		Name: name,
+		Host: host,
 	}
 }
 
-func (s *Server) connect() error {
+func (s *Server) Connect() error {
 	var err error
-	s.conn, err = net.Dial("tcp", s.host)
+	s.conn, err = net.Dial("tcp", s.Host)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (s *Server) connect() error {
 	return nil
 }
 
-func (s *Server) disconnect() error {
+func (s *Server) Disconnect() error {
 	return s.conn.Close()
 }
 
@@ -95,7 +95,7 @@ func sendHandshake(s *Server) error {
 	pl.WriteByte(protocolVersion)
 
 	// server address
-	host, port, err := net.SplitHostPort(s.host)
+	host, port, err := net.SplitHostPort(s.Host)
 	if err != nil {
 		panic(err)
 	}
