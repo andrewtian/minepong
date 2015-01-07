@@ -29,44 +29,16 @@ type Pong struct {
 	FavIcon     string      `json:"favicon"`
 }
 
-type Server struct {
-	Name string
-	Host string
-
-	conn net.Conn
-}
-
-func NewServer(name string, host string) *Server {
-	return &Server{
-		Name: name,
-		Host: host,
-	}
-}
-
-func (s *Server) Connect() error {
-	var err error
-	s.conn, err = net.Dial("tcp", s.Host)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *Server) Disconnect() error {
-	return s.conn.Close()
-}
-
-func (s *Server) Ping() (*Pong, error) {
-	if err := sendHandshake(s); err != nil {
+func Ping(conn net.Conn, host string) (*Pong, error) {
+	if err := SendHandshake(conn, host); err != nil {
 		return nil, err
 	}
 
-	if err := sendStatusRequest(s); err != nil {
+	if err := SendStatusRequest(conn); err != nil {
 		return nil, err
 	}
 
-	pong, err := readPong(s.conn)
+	pong, err := readPong(conn)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +57,7 @@ func makePacket(pl *bytes.Buffer) *bytes.Buffer {
 	return &buf
 }
 
-func sendHandshake(s *Server) error {
+func SendHandshake(conn net.Conn, host string) error {
 	pl := &bytes.Buffer{}
 
 	// packet id
@@ -95,7 +67,7 @@ func sendHandshake(s *Server) error {
 	pl.WriteByte(protocolVersion)
 
 	// server address
-	host, port, err := net.SplitHostPort(s.Host)
+	host, port, err := net.SplitHostPort(host)
 	if err != nil {
 		panic(err)
 	}
@@ -113,20 +85,20 @@ func sendHandshake(s *Server) error {
 	// next state (status)
 	pl.WriteByte(0x01)
 
-	if _, err := makePacket(pl).WriteTo(s.conn); err != nil {
+	if _, err := makePacket(pl).WriteTo(conn); err != nil {
 		return errors.New("cannot write handshake")
 	}
 
 	return nil
 }
 
-func sendStatusRequest(s *Server) error {
+func SendStatusRequest(conn net.Conn) error {
 	pl := &bytes.Buffer{}
 
 	// send request zero
 	pl.WriteByte(0x00)
 
-	if _, err := makePacket(pl).WriteTo(s.conn); err != nil {
+	if _, err := makePacket(pl).WriteTo(conn); err != nil {
 		return errors.New("cannot write send status request")
 	}
 
