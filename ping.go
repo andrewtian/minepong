@@ -38,7 +38,7 @@ func Ping(conn net.Conn, host string) (*Pong, error) {
 		return nil, err
 	}
 
-	pong, err := readPong(conn)
+	pong, err := ReadPong(conn)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func encodeVarint(x uint64) []byte {
 	return buf[0:n]
 }
 
-func readPong(rd io.Reader) (*Pong, error) {
+func ReadPong(rd io.Reader) (*Pong, error) {
 	r := bufio.NewReader(rd)
 	nl, err := binary.ReadUvarint(r)
 	if err != nil {
